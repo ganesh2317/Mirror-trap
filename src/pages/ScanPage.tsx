@@ -643,7 +643,15 @@ export function ScanPage() {
   const startedRef = useRef(false);
 
   const runScan = useCallback(
-    async (d: string) => {
+    async (rawDomain: string) => {
+      const d = rawDomain
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/\/.*$/, '')
+        .replace(/^www\./, '');
+      if (!d) return;
+
       setPhase('scanning');
       setResult(null);
       setDossierOpen(false);
@@ -655,6 +663,7 @@ export function ScanPage() {
         DNS: false,
         'Security Headers': false,
       });
+
       setTerm([
         { text: `$ mirrortrap scan ${d}`, tone: 'cmd' },
         { text: '> Initializing 5-source OSINT sweep...', tone: 'dim' },

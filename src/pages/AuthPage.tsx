@@ -21,10 +21,19 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setErr('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      setErr('Password must be at least 6 characters long.');
+      return;
+    }
     setLoading(true);
     try {
-      if (mode === 'login') await signIn(email, password);
-      else await signUp(email, password);
+      if (mode === 'login') await signIn(cleanEmail, password);
+      else await signUp(cleanEmail, password);
       const redirect = (location.state as { from?: string } | null)?.from ?? '/dashboard';
       navigate(redirect, { replace: true });
     } catch (e: unknown) {
@@ -34,6 +43,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen animate-fade-in">

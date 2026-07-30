@@ -28,8 +28,19 @@ import type { ScanResult } from '@/lib/types';
 import { usePageTitle } from '@/lib/usePageTitle';
 import { FinancialImpact } from '@/components/FinancialImpact';
 
+function escapeHtml(str: string): string {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function downloadReport(s: ScanResult) {
-  const html = `<!doctype html><html><head><title>MirrorTrap — ${s.domain}</title>
+  const safeDomain = escapeHtml(s.domain);
+  const safeEntry = escapeHtml(s.primary_entry_path);
+  const html = `<!doctype html><html><head><title>MirrorTrap — ${safeDomain}</title>
 <style>
 body{font-family:Inter,system-ui;background:#0D0B1A;color:#e6e4f2;padding:32px;max-width:820px;margin:0 auto}
 h1{font-weight:700;margin:0}.muted{color:#8c8aa6}
@@ -41,21 +52,21 @@ h1{font-weight:700;margin:0}.muted{color:#8c8aa6}
 .l{background:rgba(29,158,117,0.15);color:#1D9E75}
 </style></head><body>
 <h1>MirrorTrap Threat Report</h1>
-<div class="muted">${s.domain} · ${new Date(s.timestamp).toLocaleString()}</div>
+<div class="muted">${safeDomain} · ${new Date(s.timestamp).toLocaleString()}</div>
 <div class="box">
   <div><b>ARS Score:</b> ${s.ars_score} / 100</div>
   <div><b>Time to exploit:</b> ${s.estimated_time_to_exploit_hours}h</div>
-  <div><b>Primary entry path:</b> ${s.primary_entry_path}</div>
+  <div><b>Primary entry path:</b> ${safeEntry}</div>
   <div><b>Confidence:</b> ${s.confidence}%</div>
 </div>
 ${s.findings
   .map(
     (f) => `<div class="box">
-  <span class="sev ${f.severity === 'CRITICAL' ? 'c' : f.severity === 'HIGH' ? 'h' : f.severity === 'MEDIUM' ? 'm' : 'l'}">${f.severity}</span>
-  <span class="muted" style="margin-left:8px">${f.source}</span>
-  <div style="margin-top:6px;font-weight:600">${f.title}</div>
-  <div class="muted" style="margin-top:4px">${f.description}</div>
-  <div style="margin-top:6px;font-size:12px">${f.meaning}</div>
+  <span class="sev ${f.severity === 'CRITICAL' ? 'c' : f.severity === 'HIGH' ? 'h' : f.severity === 'MEDIUM' ? 'm' : 'l'}">${escapeHtml(f.severity)}</span>
+  <span class="muted" style="margin-left:8px">${escapeHtml(f.source)}</span>
+  <div style="margin-top:6px;font-weight:600">${escapeHtml(f.title)}</div>
+  <div class="muted" style="margin-top:4px">${escapeHtml(f.description)}</div>
+  <div style="margin-top:6px;font-size:12px">${escapeHtml(f.meaning)}</div>
 </div>`,
   )
   .join('')}
@@ -66,6 +77,7 @@ ${s.findings
     w.document.close();
   }
 }
+
 
 function StatCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
   return (
