@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import type { BadgeVariant } from '@/lib/badgeUtils';
 
-export type BadgeVariant = 'critical' | 'high' | 'medium' | 'low' | 'info' | 'active' | 'inactive';
+export type { BadgeVariant };
+
 
 const VARIANT_STYLES: Record<BadgeVariant, string> = {
   critical: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -49,16 +51,6 @@ export function Badge({ variant, children, pulse = false, className }: BadgeProp
   );
 }
 
-// Backward-compat alias for code still referencing SeverityBadge
+// Backward-compat alias for code referencing SeverityBadge
 export { Badge as SeverityBadge };
 
-// Convenience mapper from severity string
-export function severityVariant(s: string): BadgeVariant {
-  switch (s.toUpperCase()) {
-    case 'CRITICAL': return 'critical';
-    case 'HIGH': return 'high';
-    case 'MEDIUM': return 'medium';
-    case 'LOW': return 'low';
-    default: return 'info';
-  }
-}

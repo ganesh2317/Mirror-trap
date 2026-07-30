@@ -287,8 +287,10 @@ function DecoyCard({ d, onOpen }: { d: Decoy; onOpen: (d: Decoy) => void }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [now] = useState(() => Date.now());
   const recentlyTriggered = d.logs.length > 0 &&
-    Date.now() - new Date(d.logs[d.logs.length - 1]?.timestamp ?? 0).getTime() < 3600000;
+    now - new Date(d.logs[d.logs.length - 1]?.timestamp ?? 0).getTime() < 3600000;
+
 
   return (
     <GlassCard

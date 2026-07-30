@@ -1,9 +1,9 @@
-import { Badge, severityVariant } from './Badge';
+import { Badge } from './Badge';
+import { severityVariant, type BadgeVariant } from '@/lib/badgeUtils';
 import type { Severity } from '@/lib/types';
 
-// Re-export from Badge for new code
-export { Badge, severityVariant } from './Badge';
-export type { BadgeVariant } from './Badge';
+export { Badge };
+export type { BadgeVariant };
 
 interface SeverityBadgeProps {
   severity: Severity | string;
@@ -21,3 +21,4 @@ export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
     </Badge>
   );
 }
+

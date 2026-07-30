@@ -72,7 +72,8 @@ export function ThreatActivityGraph({ data, className }: ThreatActivityGraphProp
       time: relativeLabel(d.timestamp, rangeHours),
       count: d.count,
     }));
-  }, [data, range, rangeHours]);
+  }, [data, rangeHours]);
+
 
   return (
     <div className={cn(className)}>

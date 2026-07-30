@@ -21,7 +21,9 @@ import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { LivePulseDot } from '@/components/ui/LivePulseDot';
 import { ThreatActivityGraph } from '@/components/charts/ThreatActivityGraph';
 import { AttackVectorRadar } from '@/components/charts/AttackVectorRadar';
-import { Badge, severityVariant } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
+import { severityVariant } from '@/lib/badgeUtils';
+
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/lib/usePageTitle';

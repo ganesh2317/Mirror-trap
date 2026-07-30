@@ -18,7 +18,9 @@ import { useApp } from '@/lib/useApp';
 import { cn } from '@/lib/utils';
 import { usePageTitle } from '@/lib/usePageTitle';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge, severityVariant } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
+import { severityVariant } from '@/lib/badgeUtils';
+
 import { CircularGauge } from '@/components/ui/CircularGauge';
 import { Timeline } from '@/components/ui/Timeline';
 import { LivePulseDot } from '@/components/ui/LivePulseDot';

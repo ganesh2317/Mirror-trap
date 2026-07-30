@@ -23,7 +23,9 @@ import type { Alert } from '@/lib/types';
 import { cn, formatTime } from '@/lib/utils';
 import { usePageTitle } from '@/lib/usePageTitle';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge, severityVariant } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
+import { severityVariant } from '@/lib/badgeUtils';
+
 import { LivePulseDot } from '@/components/ui/LivePulseDot';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 
@@ -66,7 +68,18 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ value: number; name: string }> }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="glass rounded-xl px-3 py-2 text-xs">
+      <div className="text-text-muted">{payload[0].name}</div>
+      <div className="font-mono font-bold text-indigo-400">{payload[0].value}</div>
+    </div>
+  );
+}
+
 function AlertCard({ a, isNewArrival }: { a: Alert; isNewArrival: boolean }) {
+
   const { updateAlertStatus, pushToast } = useApp();
   const [open, setOpen] = useState(false);
 
@@ -231,16 +244,6 @@ function AttackIntelligence({ alerts }: { alerts: Alert[] }) {
     ];
   }, [alerts]);
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; name: string }> }) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <div className="glass rounded-xl px-3 py-2 text-xs">
-        <div className="text-text-muted">{payload[0].name}</div>
-        <div className="font-mono font-bold text-indigo-400">{payload[0].value}</div>
-      </div>
-    );
-  };
-
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {/* Origin chart */}
@@ -313,12 +316,16 @@ export function AlertsPage() {
     if (alerts.length > prevCountRef.current) {
       const topId = alerts[0]?.id;
       if (topId) {
-        setNewIds((prev) => { const next = new Set(prev); next.add(topId); return next; });
-        setTimeout(() => setNewIds((prev) => { const next = new Set(prev); next.delete(topId!); return next; }), 3200);
+        const timer = setTimeout(() => {
+          setNewIds((prev) => { const next = new Set(prev); next.add(topId); return next; });
+          setTimeout(() => setNewIds((prev) => { const next = new Set(prev); next.delete(topId); return next; }), 3200);
+        }, 0);
+        return () => clearTimeout(timer);
       }
     }
     prevCountRef.current = alerts.length;
   }, [alerts]);
+
 
   const filtered = useMemo(() => {
     let list = [...alerts];
