@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Bell,
+  Building2,
+  ChevronDown,
   Eye,
   FileSearch,
   Keyboard,
@@ -20,6 +22,9 @@ import { useApp } from '@/lib/useApp';
 import { cn } from '@/lib/utils';
 import { LivePulseDot } from './ui/LivePulseDot';
 import { useEffect, useRef, useState } from 'react';
+import { NotificationCenter } from './NotificationCenter';
+import { Badge } from './ui/Badge';
+
 
 const NAV = [
   { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, enterprise: false },
@@ -85,6 +90,87 @@ function DemoBanner({ onDismiss }: { onDismiss: () => void }) {
       <button onClick={onDismiss} className="hover:text-white transition-colors" aria-label="Dismiss demo mode">
         <X className="h-4 w-4" />
       </button>
+    </div>
+  );
+}
+
+function OrgSwitcher() {
+  const { organizations, currentOrg, switchOrg, createOrg } = useApp();
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim()) return;
+    createOrg(newOrgName.trim());
+    setNewOrgName('');
+    setCreating(false);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-text-primary hover:bg-indigo-500/20 transition-all"
+        aria-label="Switch organization"
+      >
+        <Building2 className="h-3.5 w-3.5 text-indigo-400" />
+        <span className="max-w-[110px] truncate">{currentOrg?.name ?? 'Workspace'}</span>
+        <ChevronDown className="h-3 w-3 text-text-muted" />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-10 z-50 w-64 rounded-xl border border-border/80 bg-bg-surface/95 backdrop-blur-xl p-3 shadow-glow animate-fade-in space-y-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-2">Workspaces</div>
+            <div className="space-y-1">
+              {organizations.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => {
+                    switchOrg(o.id);
+                    setOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-2 rounded-lg text-xs font-medium transition ${
+                    o.id === currentOrg?.id ? 'bg-indigo-500/20 text-indigo-300' : 'text-text-secondary hover:bg-white/5'
+                  }`}
+                >
+                  <span className="truncate">{o.name}</span>
+                  <Badge variant={o.plan === 'enterprise' ? 'critical' : 'active'} className="text-[9px] !py-0 uppercase">
+                    {o.plan}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+
+            {creating ? (
+              <form onSubmit={handleCreate} className="pt-2 border-t border-border/40 space-y-2">
+                <input
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  placeholder="Organization name..."
+                  className="input-dark !py-1 text-xs"
+                  autoFocus
+                />
+                <div className="flex gap-1">
+                  <button type="submit" className="btn-primary flex-1 !py-1 text-[11px]">Save</button>
+                  <button type="button" onClick={() => setCreating(false)} className="btn-ghost flex-1 !py-1 text-[11px]">Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setCreating(true)}
+                className="w-full text-left text-xs text-indigo-400 hover:underline pt-2 border-t border-border/40 flex items-center gap-1 font-medium px-2"
+              >
+                + Create Organization
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -227,6 +313,8 @@ export function DashboardShell() {
 
           <Logo />
 
+          <OrgSwitcher />
+
           {/* Desktop quick scan */}
           <form onSubmit={onQuickScan} className="relative hidden max-w-[240px] flex-1 md:flex ml-2">
             <Radar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -267,15 +355,8 @@ export function DashboardShell() {
               <Zap className="h-3.5 w-3.5" /> Simulate
             </button>
 
-            {/* Alerts bell */}
-            <NavLink to="/alerts" className="relative p-2 text-text-muted hover:text-text-primary transition-colors">
-              <Bell className="h-4 w-4" />
-              {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
-                  {unread > 9 ? '9+' : unread}
-                </span>
-              )}
-            </NavLink>
+            {/* Notification Center */}
+            <NotificationCenter />
 
             {/* Keyboard shortcuts */}
             <button
