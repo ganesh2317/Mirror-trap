@@ -6,7 +6,10 @@ export type ScanSource =
   | 'crt.sh'
   | 'GitHub'
   | 'DNS'
-  | 'Security Headers';
+  | 'Security Headers'
+  | 'SSL'
+  | 'Whois'
+  | 'Tech Stack';
 
 export interface Finding {
   id: string;
@@ -19,6 +22,75 @@ export interface Finding {
   isReal?: boolean;
   /** Arbitrary raw payload from the source (subdomains, ports, CVEs, repos, ...). */
   real_data?: unknown;
+}
+
+export interface DnsRecordItem {
+  type: 'A' | 'AAAA' | 'MX' | 'TXT' | 'NS' | 'CNAME';
+  name: string;
+  data: string;
+  ttl?: number;
+}
+
+export interface DnsSummary {
+  ips: string[];
+  aaaa: string[];
+  mailServers: string[];
+  nameservers: string[];
+  txtRecs: string[];
+  cnames: string[];
+  tech: string[];
+}
+
+export interface SslSummary {
+  issuer: string;
+  validFrom?: string;
+  validTo?: string;
+  daysRemaining: number;
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+  tlsVersion: string;
+  warnings: string[];
+  isReal: boolean;
+}
+
+export interface HeaderCheckItem {
+  name: string;
+  present: boolean;
+  value?: string;
+  recommended: string;
+  severity: Severity;
+}
+
+export interface SecurityHeaderSummary {
+  grade: 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+  score: number;
+  headers: HeaderCheckItem[];
+  missingCount: number;
+  isReal: boolean;
+}
+
+export interface TechnologyItem {
+  name: string;
+  category: 'Framework' | 'Web Server' | 'CDN/DNS' | 'SaaS/CRM' | 'Security' | 'Analytics';
+  confidence: number;
+  icon?: string;
+}
+
+export interface WhoisSummary {
+  registrar?: string;
+  createdDate?: string;
+  expiresDate?: string;
+  nameServers?: string[];
+  status?: string;
+  isReal: boolean;
+}
+
+export interface IntelData {
+  dns?: DnsSummary;
+  ssl?: SslSummary;
+  headers?: SecurityHeaderSummary;
+  tech?: TechnologyItem[];
+  whois?: WhoisSummary;
+  subdomains?: string[];
 }
 
 export interface ScanResult {
@@ -34,6 +106,8 @@ export interface ScanResult {
   real_sources_used?: ScanSource[];
   /** Wall-clock duration of the real OSINT sweep, in seconds. */
   scan_duration_s?: number;
+  /** Structured intelligence data from DNS, SSL, Headers, Tech Stack, and WHOIS */
+  intel_data?: IntelData;
 }
 
 export type DecoyType =
