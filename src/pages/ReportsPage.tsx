@@ -28,7 +28,10 @@ import type { ScanResult } from '@/lib/types';
 import { usePageTitle } from '@/lib/usePageTitle';
 import { FinancialImpact } from '@/components/FinancialImpact';
 
+import { EmptyState } from '@/components/ui/EmptyState';
+
 function escapeHtml(str: string): string {
+
   return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -267,14 +270,15 @@ function OverviewTab({
           <span className="font-semibold text-brand-danger">CRITICAL threshold</span> at ARS 70.
         </div>
         {trend.length === 0 ? (
-          <div className="flex h-[260px] items-center justify-center text-sm text-slate-400">
-            No scans yet —{' '}
-            <Link to="/scan" className="ml-1 text-brand-purple hover:underline">
-              run your first scan
-            </Link>
-            .
-          </div>
+          <EmptyState
+            icon={Radar}
+            title="No scan history available"
+            description="Run your first OSINT attack-surface scan to record historical ARS trends and executive threat reports."
+            primaryAction={{ label: 'Run Attack Surface Scan', to: '/scan', icon: Radar }}
+            className="!p-6 my-4"
+          />
         ) : (
+
           <div style={{ width: '100%', height: 300 }}>
             <ResponsiveContainer>
               <ComposedChart data={trend} margin={{ top: 12, right: 24, bottom: 8, left: 0 }}>

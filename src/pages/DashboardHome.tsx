@@ -25,7 +25,9 @@ import { Badge } from '@/components/ui/Badge';
 import { severityVariant } from '@/lib/badgeUtils';
 
 import { GlassCard } from '@/components/ui/GlassCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { cn, formatDate } from '@/lib/utils';
+
 import { usePageTitle } from '@/lib/usePageTitle';
 import { arsScoreColor } from '@/lib/design-system';
 
@@ -139,20 +141,24 @@ function MTTDCard({ minutes, percentileFaster }: { minutes: number; percentileFa
   );
 }
 
+
 function RecentAlertsFeed({ alerts }: { alerts: ReturnType<typeof useApp>['alerts'] }) {
+
   if (alerts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-40 text-center">
-        <Shield className="h-10 w-10 text-text-muted mb-3 opacity-40" />
-        <div className="text-sm text-text-muted">No alerts yet</div>
-        <div className="text-xs text-text-muted mt-1">Deploy traps to start catching reconnaissance</div>
-      </div>
+      <EmptyState
+        icon={Shield}
+        title="No tripwires fired"
+        description="Your decoy assets are deployed and actively listening for unauthorized reconnaissance."
+        primaryAction={{ label: 'Simulate Recon Attack', to: '/alerts', icon: Zap }}
+        className="!p-4 bg-transparent border-none shadow-none"
+      />
     );
   }
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2" role="feed" aria-label="Recent threat alerts">
       {alerts.slice(0, 5).map((a) => (
-        <li key={a.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/3" style={{ background: 'rgba(255,255,255,0.03)' }}>
+        <li key={a.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/5 active:scale-[0.99]" style={{ background: 'rgba(255,255,255,0.03)' }}>
           <Zap className={cn('h-4 w-4 shrink-0', a.severity === 'CRITICAL' ? 'text-red-400' : 'text-amber-400')} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium text-text-primary">{a.asset_used}</div>
@@ -187,9 +193,10 @@ function QuickScanCard({ recentScans }: { recentScans: ReturnType<typeof useApp>
             onChange={(e) => setDomain(e.target.value)}
             placeholder="company.com"
             className="input-dark !pl-9"
+            aria-label="Target domain to scan"
           />
         </div>
-        <button type="submit" className="btn-primary !px-4">
+        <button type="submit" className="btn-primary !px-4 active:scale-95 transition-transform" aria-label="Start quick scan">
           <ArrowRight className="h-4 w-4" />
         </button>
       </form>
@@ -199,7 +206,7 @@ function QuickScanCard({ recentScans }: { recentScans: ReturnType<typeof useApp>
             <Link
               key={s.id}
               to="/scan"
-              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs hover:bg-white/4 transition-colors"
+              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs hover:bg-white/5 active:scale-[0.99] transition-all"
             >
               <span className="font-mono text-text-secondary truncate">{s.domain}</span>
               <span className="font-mono text-amber-400 ml-2 flex-shrink-0">ARS {s.ars_score}</span>
@@ -219,11 +226,11 @@ function TrapPerformanceCard({ decoys }: { decoys: ReturnType<typeof useApp>['de
         <Target className="h-3.5 w-3.5 text-indigo-400" /> Trap Performance
       </div>
       {active.length === 0 ? (
-        <div className="text-sm text-text-muted">
-          No active traps. <Link to="/phantomshield" className="text-indigo-400 hover:underline">Deploy one →</Link>
+        <div className="text-sm text-text-muted py-2">
+          No active traps. <Link to="/phantomshield" className="text-indigo-400 hover:underline font-medium">Deploy PhantomShield →</Link>
         </div>
       ) : (
-        <table className="w-full text-xs">
+        <table className="w-full text-xs" aria-label="Decoy performance summary">
           <thead>
             <tr className="text-text-muted">
               <th className="text-left pb-2 font-semibold">Trap</th>
@@ -250,6 +257,7 @@ function TrapPerformanceCard({ decoys }: { decoys: ReturnType<typeof useApp>['de
     </div>
   );
 }
+
 
 export function DashboardHome() {
   usePageTitle('MirrorTrap — Dashboard');

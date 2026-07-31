@@ -28,6 +28,8 @@ import { severityVariant } from '@/lib/badgeUtils';
 
 import { LivePulseDot } from '@/components/ui/LivePulseDot';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
+import { EmptyState } from '@/components/ui/EmptyState';
+
 
 type SeverityFilter = 'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 type TimeFilter = 'ALL' | 'UNREAD' | 'TODAY' | 'WEEK';
@@ -464,23 +466,28 @@ export function AlertsPage() {
 
       {/* Alert list */}
       {filtered.length === 0 ? (
-        <GlassCard className="p-12 text-center">
-          <Shield className="mx-auto h-12 w-12 text-text-muted opacity-40 mb-4" />
-          <div className="text-lg font-semibold text-text-primary">
-            {alerts.length === 0 ? 'No alerts yet' : 'No alerts match your filters'}
-          </div>
-          <div className="mt-2 text-sm text-text-muted">
-            {alerts.length === 0
-              ? 'Your traps are deployed and waiting. Any attacker activity will appear here instantly.'
-              : 'Try adjusting the filters above.'}
-          </div>
-          {alerts.length === 0 && (
-            <Link to="/phantomshield" className="mt-4 btn-primary inline-flex">
-              Deploy a Trap
-            </Link>
-          )}
-        </GlassCard>
+        <EmptyState
+          icon={Shield}
+          title={alerts.length === 0 ? 'No tripwire alerts recorded' : 'No alerts match your filter criteria'}
+          description={
+            alerts.length === 0
+              ? 'Your active decoy assets are monitoring for attacker probes. Any unauthorized access will surface here immediately.'
+              : 'Try clearing or broadening your severity, time range, or search keyword filters above.'
+          }
+          primaryAction={
+            alerts.length === 0
+              ? { label: 'Deploy PhantomShield Trap', to: '/phantomshield', icon: ShieldAlert }
+              : { label: 'Reset All Filters', onClick: () => { setSeverity('ALL'); setTimeFilter('ALL'); setSearch(''); } }
+          }
+          secondaryAction={
+            alerts.length === 0
+              ? { label: 'Simulate Recon Attack', onClick: onSimulate, icon: Zap }
+              : undefined
+          }
+          className="my-4"
+        />
       ) : (
+
         <div className="space-y-3">
           <div className="text-xs text-text-muted">Showing {filtered.length} of {alerts.length} alerts</div>
           {filtered.map((a) => (
