@@ -97,16 +97,21 @@ function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void })
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col shadow-2xl animate-slide-in-right"
-        style={{ background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col shadow-2xl animate-slide-in-right"
+        style={{ background: '#0D1117', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        role="dialog"
+        aria-label="Mobile Navigation"
+      >
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <Logo />
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary">
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary" aria-label="Close navigation drawer">
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Main Navigation">
+
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}

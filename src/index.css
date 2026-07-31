@@ -209,7 +209,37 @@ body {
   opacity: 0.4;
 }
 
+/* === ACCESSIBILITY FOCUS STYLES === */
+:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.8) !important;
+  outline-offset: 2px !important;
+}
+
+/* === PRINT STYLES (Phase F: Executive Report Printing) === */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  header, nav, sidebar, button, .no-print {
+    display: none !important;
+  }
+  .card, .glass {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+  .text-text-muted {
+    color: #64748b !important;
+  }
+  .text-text-primary, h1, h2, h3, h4 {
+    color: #0f172a !important;
+  }
+}
+
 /* === PAGE TRANSITION === */
 .page-enter {
   animation: fade-in 0.3s ease-out both;
 }
+

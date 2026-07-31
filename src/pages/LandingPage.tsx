@@ -371,6 +371,50 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="faq" className="border-t border-border/50">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <div className="mb-10 text-center">
+            <div className="pill">FAQ</div>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-2 text-slate-400">
+              Everything you need to know about MirrorTrap OSINT scanning and PhantomShield tripwires.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {[
+              {
+                q: 'Does MirrorTrap perform intrusive penetration testing on my network?',
+                a: 'No. MirrorTrap operates purely via passive, public OSINT intelligence sources (HIBP, Shodan, crt.sh, GitHub public search, DNS). We never send intrusive exploit payloads or breach attempts.',
+              },
+              {
+                q: 'How quickly do PhantomShield decoys trigger alerts?',
+                a: 'Tripwires trigger in real time. The moment an attacker attempts authentication or accesses a decoy bucket, an alert is generated with IP geolocation, user agent, and threat severity.',
+              },
+              {
+                q: 'Do I need a dedicated SOC or SIEM integration to use MirrorTrap?',
+                a: 'No. MirrorTrap is designed to be fully self-contained. It correlates signals automatically, computes your ARS score, and generates executive-ready PDF threat reports.',
+              },
+              {
+                q: 'Can I export threat reports for compliance or executive briefings?',
+                a: 'Yes. Every scan report can be exported as a clean, printable executive summary HTML document complete with remediation roadmaps and financial exposure metrics.',
+              },
+            ].map((faq, idx) => (
+              <details key={idx} className="group rounded-xl border border-border/60 bg-bg-surface/50 p-4 transition-colors hover:border-brand-purple/40">
+                <summary className="flex cursor-pointer select-none items-center justify-between text-base font-semibold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-purple rounded">
+                  <span>{faq.q}</span>
+                  <span className="ml-2 font-mono text-brand-purple transition-transform group-open:rotate-180">↓</span>
+                </summary>
+                <div className="mt-3 text-sm leading-relaxed text-slate-400 border-t border-border/40 pt-3">
+                  {faq.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="border-t border-border/50">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-8 px-6 py-16 md:grid-cols-2">
           <div>
@@ -384,8 +428,8 @@ export function LandingPage() {
               Fake AWS keys, honey admin portals, tracking URLs. If anyone touches them, you know —
               with the IP, timing, and inferred intent. No SIEM required.
             </p>
-            <Link to="/signup" className="btn-amber mt-5">
-              Deploy PhantomShield <ArrowRight className="h-4 w-4" />
+            <Link to="/signup" className="btn-amber mt-5 active:scale-95 transition-transform inline-flex items-center">
+              Deploy PhantomShield <ArrowRight className="h-4 w-4 ml-1.5" />
             </Link>
           </div>
           <div className="card p-5">
@@ -406,6 +450,7 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
 
       <footer className="border-t border-border/50">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-slate-500 md:flex-row">
