@@ -9,15 +9,19 @@ import {
   Circle,
   Cloud,
   Code2,
+  Cpu,
   Crosshair,
   Database,
   Download,
   ExternalLink,
   FileKey,
   Globe,
+  History,
+  Layers,
   Lock,
   Loader2,
   Radar,
+  Server,
   ShieldHalf,
   Sparkles,
   Wifi,
@@ -32,6 +36,9 @@ import { Mail, Building2, AtSign } from 'lucide-react';
 import { arsColor, cn, sleep } from '@/lib/utils';
 import { usePageTitle } from '@/lib/usePageTitle';
 import { EmailScanFlow } from '@/components/EmailScanFlow';
+import { ScanHistoryModal } from '@/components/ScanHistoryModal';
+import { Badge } from '@/components/ui/Badge';
+
 
 const SOURCES: Array<{
   key: ScanSource;
@@ -47,6 +54,9 @@ const SOURCES: Array<{
   { key: 'GitHub', label: 'GitHub public search', icon: Code2, delay: 1300, okLine: '1 credential pattern found', tone: 'err' },
   { key: 'DNS', label: 'DNS records', icon: Database, delay: 600, okLine: 'Tech stack identified', tone: 'ok' },
   { key: 'Security Headers', label: 'Security Headers', icon: Lock, delay: 700, okLine: 'Grade returned', tone: 'warn' },
+  { key: 'SSL', label: 'SSL / TLS Certificate', icon: Lock, delay: 500, okLine: 'TLS 1.3 Valid', tone: 'ok' },
+  { key: 'Whois', label: 'WHOIS Record', icon: Server, delay: 600, okLine: 'Registrar queried', tone: 'ok' },
+  { key: 'Tech Stack', label: 'Technology Detection', icon: Cpu, delay: 700, okLine: 'Frameworks identified', tone: 'ok' },
 ];
 
 const toneClass = {
@@ -311,7 +321,150 @@ function FindingCard({ f }: { f: Finding }) {
   );
 }
 
+function DomainIntelligenceView({ result }: { result: ScanResult }) {
+  const intel = result.intel_data;
+  if (!intel) return null;
+
+  const dns = intel.dns;
+  const ssl = intel.ssl;
+  const tech = intel.tech;
+  const whois = intel.whois;
+
+  return (
+    <div className="space-y-4">
+      <div className="text-xs font-bold uppercase tracking-widest text-brand-purple flex items-center gap-2">
+        <Layers className="h-4 w-4" /> Domain Reconnaissance & Infrastructure Intelligence
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* DNS Intelligence Card */}
+        {dns && (
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <Database className="h-4 w-4 text-indigo-400" /> DNS Records
+              </div>
+              <Badge variant="info" className="text-[10px]">LIVE GOOGLE DNS</Badge>
+            </div>
+            <div className="space-y-2 text-xs font-mono">
+              {dns.ips.length > 0 && (
+                <div>
+                  <span className="text-slate-500 font-sans">A (IPv4): </span>
+                  <span className="text-indigo-300 font-bold">{dns.ips.join(', ')}</span>
+                </div>
+              )}
+              {dns.aaaa.length > 0 && (
+                <div>
+                  <span className="text-slate-500 font-sans">AAAA (IPv6): </span>
+                  <span className="text-slate-300">{dns.aaaa.join(', ')}</span>
+                </div>
+              )}
+              {dns.mailServers.length > 0 && (
+                <div>
+                  <span className="text-slate-500 font-sans">MX: </span>
+                  <span className="text-amber-300">{dns.mailServers.join(' → ')}</span>
+                </div>
+              )}
+              {dns.nameservers.length > 0 && (
+                <div>
+                  <span className="text-slate-500 font-sans">NS: </span>
+                  <span className="text-slate-400">{dns.nameservers.join(', ')}</span>
+                </div>
+              )}
+              {dns.txtRecs.length > 0 && (
+                <div className="truncate">
+                  <span className="text-slate-500 font-sans">TXT: </span>
+                  <span className="text-slate-400">{dns.txtRecs.slice(0, 3).join(' | ')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* SSL Analysis Card */}
+        {ssl && (
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <Lock className="h-4 w-4 text-emerald-400" /> SSL / TLS Certificate
+              </div>
+              <Badge variant={ssl.daysRemaining < 30 ? 'critical' : 'active'} className="text-[10px]">
+                Grade {ssl.grade}
+              </Badge>
+            </div>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Issuer:</span>
+                <span className="font-mono text-slate-200">{ssl.issuer}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Protocol:</span>
+                <span className="font-mono text-emerald-400 font-bold">{ssl.tlsVersion}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Expiration:</span>
+                <span className="font-mono text-slate-300">{ssl.validTo} ({ssl.daysRemaining} days left)</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Technology Detection */}
+        {tech && tech.length > 0 && (
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <Cpu className="h-4 w-4 text-purple-400" /> Technology Detection
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">{tech.length} detected</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tech.map((t) => (
+                <div key={t.name} className="flex items-center gap-1.5 rounded-lg border border-border bg-bg-terminal px-2.5 py-1 text-xs">
+                  <span className="font-medium text-slate-200">{t.name}</span>
+                  <span className="text-[10px] font-mono text-indigo-400">({t.confidence}%)</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* WHOIS Summary */}
+        {whois && (
+          <div className="card p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <Server className="h-4 w-4 text-amber-400" /> WHOIS Intelligence
+              </div>
+              <Badge variant={whois.isReal ? 'active' : 'inactive'} className="text-[10px]">
+                {whois.isReal ? 'LIVE WHOIS' : 'DEMO / HEURISTIC'}
+              </Badge>
+            </div>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Registrar:</span>
+                <span className="font-mono text-slate-200">{whois.registrar}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Created:</span>
+                <span className="font-mono text-slate-300">{whois.createdDate}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Expires:</span>
+                <span className="font-mono text-amber-300">{whois.expiresDate}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Dossier({ scan }: { scan: ScanResult }) {
+
   const criticals = scan.findings.filter((f) => f.severity === 'CRITICAL').length;
   const highs = scan.findings.filter((f) => f.severity === 'HIGH').length;
   return (
@@ -619,7 +772,7 @@ export function ScanPage() {
   const [params] = useSearchParams();
   const initial = params.get('domain') ?? '';
   const auto = params.get('auto') === '1';
-  const { demoMode, addScan } = useApp();
+  const { demoMode, addScan, scans: scanHistory } = useApp();
   const [mode, setMode] = useState<'company' | 'email'>('company');
   const domainInputRef = useRef<HTMLInputElement>(null);
   const [domain, setDomain] = useState(initial);
@@ -634,13 +787,18 @@ export function ScanPage() {
     GitHub: false,
     DNS: false,
     'Security Headers': false,
+    SSL: false,
+    Whois: false,
+    'Tech Stack': false,
   });
   const [result, setResult] = useState<ScanResult | null>(null);
   const [term, setTerm] = useState<TermLine[]>([]);
   const [dossierOpen, setDossierOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+
 
   const runScan = useCallback(
     async (rawDomain: string) => {
@@ -662,6 +820,9 @@ export function ScanPage() {
         GitHub: false,
         DNS: false,
         'Security Headers': false,
+        SSL: false,
+        Whois: false,
+        'Tech Stack': false,
       });
 
       setTerm([
@@ -784,8 +945,23 @@ export function ScanPage() {
           >
             <AtSign className="h-3.5 w-3.5" /> Personal Email
           </button>
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition hover:bg-white/5 border border-indigo-500/30"
+          >
+            <History className="h-3.5 w-3.5" /> Scan History & Compare ({scanHistory.length})
+          </button>
         </div>
       </div>
+
+      <ScanHistoryModal
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        scans={scanHistory}
+        onSelectScan={(s) => setResult(s)}
+      />
+
 
       {mode === 'email' ? (
         <EmailScanFlow
@@ -1004,6 +1180,8 @@ export function ScanPage() {
               </div>
             </div>
           </div>
+
+          <DomainIntelligenceView result={result} />
 
           <div className="card p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

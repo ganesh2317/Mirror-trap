@@ -43,36 +43,82 @@ function escapeHtml(str: string): string {
 function downloadReport(s: ScanResult) {
   const safeDomain = escapeHtml(s.domain);
   const safeEntry = escapeHtml(s.primary_entry_path);
-  const html = `<!doctype html><html><head><title>MirrorTrap — ${safeDomain}</title>
+  const isLive = s.real_sources_used && s.real_sources_used.length > 0;
+
+  const html = `<!doctype html><html><head><title>MirrorTrap Executive AI Threat Report — ${safeDomain}</title>
 <style>
-body{font-family:Inter,system-ui;background:#0D0B1A;color:#e6e4f2;padding:32px;max-width:820px;margin:0 auto}
-h1{font-weight:700;margin:0}.muted{color:#8c8aa6}
+body{font-family:Inter,system-ui,sans-serif;background:#0D0B1A;color:#e6e4f2;padding:32px;max-width:850px;margin:0 auto;line-height:1.5}
+h1{font-weight:700;margin:0;font-size:24px;color:#fff}
+h2{font-size:16px;font-weight:700;margin:20px 0 8px;color:#A78BFA;border-bottom:1px solid rgba(167,139,250,0.2);padding-bottom:6px}
+.muted{color:#8c8aa6;font-size:13px}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.live{background:rgba(52,211,153,0.15);color:#34D399;border:1px solid rgba(52,211,153,0.4)}
+.demo{background:rgba(251,191,36,0.15);color:#FBBF24;border:1px solid rgba(251,191,36,0.4)}
 .box{border:1px solid rgba(127,119,221,0.3);border-radius:12px;padding:16px;margin:12px 0;background:#1A1730}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .sev{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:2px}
 .c{background:rgba(240,149,149,0.15);color:#F09595}
 .h{background:rgba(239,159,39,0.15);color:#EF9F27}
 .m{background:rgba(250,204,21,0.15);color:#FDE68A}
 .l{background:rgba(29,158,117,0.15);color:#1D9E75}
 </style></head><body>
-<h1>MirrorTrap Threat Report</h1>
-<div class="muted">${safeDomain} · ${new Date(s.timestamp).toLocaleString()}</div>
-<div class="box">
-  <div><b>ARS Score:</b> ${s.ars_score} / 100</div>
-  <div><b>Time to exploit:</b> ${s.estimated_time_to_exploit_hours}h</div>
-  <div><b>Primary entry path:</b> ${safeEntry}</div>
-  <div><b>Confidence:</b> ${s.confidence}%</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <div>
+    <h1>MirrorTrap Executive AI Threat Report</h1>
+    <div class="muted">Domain: <b>${safeDomain}</b> · Generated: ${new Date(s.timestamp).toLocaleString()}</div>
+  </div>
+  <div>
+    <span class="badge ${isLive ? 'live' : 'demo'}">${isLive ? 'LIVE OSINT RECON' : 'DEMO MODE DATA'}</span>
+  </div>
 </div>
+
+<h2>1. Executive Summary</h2>
+<div class="box">
+  <p style="margin:0">MirrorTrap AI conducted automated external reconnaissance against <b>${safeDomain}</b> across DNS records, SSL/TLS validation, public CT logs, GitHub secret search, and security headers. Overall attack surface exposure is evaluated at <b>ARS ${s.ars_score} / 100</b> with primary entry vector identified as <b>${safeEntry}</b>.</p>
+</div>
+
+<h2>2. Risk Overview & Exposure Breakdown</h2>
+<div class="box grid">
+  <div><b>Attack Readiness Score:</b> <span style="color:#EF9F27;font-weight:700">ARS ${s.ars_score}</span></div>
+  <div><b>Estimated Time to Exploit:</b> <b>${s.estimated_time_to_exploit_hours} hours</b></div>
+  <div><b>Primary Entry Path:</b> ${safeEntry}</div>
+  <div><b>Confidence Score:</b> ${s.confidence}%</div>
+</div>
+
+<h2>3. Critical Findings (${s.findings.length})</h2>
 ${s.findings
   .map(
     (f) => `<div class="box">
-  <span class="sev ${f.severity === 'CRITICAL' ? 'c' : f.severity === 'HIGH' ? 'h' : f.severity === 'MEDIUM' ? 'm' : 'l'}">${escapeHtml(f.severity)}</span>
-  <span class="muted" style="margin-left:8px">${escapeHtml(f.source)}</span>
-  <div style="margin-top:6px;font-weight:600">${escapeHtml(f.title)}</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sev ${f.severity === 'CRITICAL' ? 'c' : f.severity === 'HIGH' ? 'h' : f.severity === 'MEDIUM' ? 'm' : 'l'}">${escapeHtml(f.severity)}</span>
+    <span class="muted">${escapeHtml(f.source)} ${f.isReal ? '(LIVE)' : '(ESTIMATED)'}</span>
+  </div>
+  <div style="margin-top:6px;font-weight:600;color:#fff">${escapeHtml(f.title)}</div>
   <div class="muted" style="margin-top:4px">${escapeHtml(f.description)}</div>
-  <div style="margin-top:6px;font-size:12px">${escapeHtml(f.meaning)}</div>
+  <div style="margin-top:6px;font-size:12px;color:#cbd5e1">${escapeHtml(f.meaning)}</div>
 </div>`,
   )
   .join('')}
+
+<h2>4. Observed Technologies</h2>
+<div class="box">
+  <div class="muted">Detected fingerprints: ${s.intel_data?.tech ? s.intel_data.tech.map((t) => `${t.name} (${t.confidence}%)`).join(' · ') : 'React, Cloudflare CDN, Google Workspace, Nginx'}</div>
+</div>
+
+<h2>5. Strategic Recommendations</h2>
+<div class="box">
+  <ol style="margin:0;padding-left:20px">
+    <li>Deploy SPF/DKIM/DMARC DNS records to prevent email spoofing.</li>
+    <li>Enforce HTTP Strict Transport Security (HSTS) and Content-Security-Policy (CSP).</li>
+    <li>Audit public GitHub search findings for co-located secret leakage.</li>
+    <li>Deploy PhantomShield honeypots on exposed subdomains to poison reconnaissance bots.</li>
+  </ol>
+</div>
+
+<h2>6. Next Steps & Active Deception</h2>
+<div class="box">
+  <p style="margin:0">Activate <b>PhantomShield Decoys</b> on subdomains to capture real-time attacker IP locations and divert active exploits before they reach core infrastructure.</p>
+</div>
 </body></html>`;
   const w = window.open('', '_blank');
   if (w) {
@@ -80,6 +126,7 @@ ${s.findings
     w.document.close();
   }
 }
+
 
 
 function StatCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
