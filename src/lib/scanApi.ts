@@ -49,7 +49,10 @@ function finding(i: FindingInit): Finding {
 
 async function safeJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   try {
-    const res = await fetch(url, init);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(url, { ...init, signal: init?.signal ?? controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {

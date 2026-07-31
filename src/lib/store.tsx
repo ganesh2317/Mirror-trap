@@ -44,7 +44,9 @@ function loadPersisted(): Partial<Persisted> {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as Partial<Persisted>;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed as Partial<Persisted>;
   } catch {
     return {};
   }
