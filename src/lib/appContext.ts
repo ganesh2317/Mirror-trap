@@ -1,5 +1,16 @@
 import { createContext } from 'react';
-import type { Alert, Decoy, ScanResult, ThreatEvent } from './types';
+import type {
+  Alert,
+  AuditLogEntry,
+  Decoy,
+  DomainItem,
+  NotificationItem,
+  Organization,
+  OrgMember,
+  ScanResult,
+  ThreatEvent,
+  UserRole,
+} from './types';
 
 export interface Toast {
   id: string;
@@ -16,6 +27,34 @@ export interface AppCtx {
 
   demoMode: boolean;
   setDemoMode: (v: boolean) => void;
+
+  /** Multi-Tenant Organizations */
+  organizations: Organization[];
+  currentOrg: Organization;
+  switchOrg: (id: string) => void;
+  createOrg: (name: string) => void;
+
+  /** Domain Management Footprint */
+  domains: DomainItem[];
+  addDomain: (domainName: string) => void;
+  removeDomain: (id: string) => void;
+  togglePrimaryDomain: (id: string) => void;
+
+  /** User Management & RBAC */
+  members: OrgMember[];
+  inviteMember: (email: string, role: UserRole) => void;
+  updateMemberRole: (id: string, role: UserRole) => void;
+  removeMember: (id: string) => void;
+
+  /** Notification Center */
+  notifications: NotificationItem[];
+  unreadNotificationsCount: number;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+
+  /** Immutable Audit Log */
+  auditLogs: AuditLogEntry[];
+  logAuditEvent: (action: string, category: AuditLogEntry['category'], details: string) => void;
 
   /** Plan flags. `isEnterprise` gates the /protect page. */
   isPro: boolean;

@@ -181,3 +181,65 @@ export interface Alert {
   attack_path: Array<{ step: number; label: string; triggered?: boolean; predicted?: boolean }>;
   status: 'open' | 'flagged' | 'dismissed';
 }
+
+/* -------------------- Enterprise SaaS Data Models -------------------- */
+
+export type UserRole = 'Owner' | 'Administrator' | 'Security Analyst' | 'Read-only Viewer';
+
+export type PlanTier = 'free' | 'pro' | 'business' | 'enterprise';
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: PlanTier;
+  createdAt: string;
+  logoUrl?: string;
+}
+
+export interface DomainItem {
+  id: string;
+  domain: string;
+  isPrimary: boolean;
+  healthStatus: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  verificationStatus: 'VERIFIED' | 'PENDING' | 'FAILED';
+  lastScanDate?: string;
+  schedule: 'MANUAL' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+}
+
+export interface OrgMember {
+  id: string;
+  email: string;
+  role: UserRole;
+  joinedAt: string;
+  avatarUrl?: string;
+  status: 'ACTIVE' | 'PENDING';
+}
+
+export type NotificationCategory =
+  | 'scan'
+  | 'critical'
+  | 'ssl'
+  | 'report'
+  | 'tripwire'
+  | 'system';
+
+export interface NotificationItem {
+  id: string;
+  timestamp: string;
+  category: NotificationCategory;
+  title: string;
+  body: string;
+  read: boolean;
+  link?: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actorEmail: string;
+  action: string;
+  category: 'AUTH' | 'SCAN' | 'SETTINGS' | 'USER' | 'ORG' | 'REPORT' | 'SECURITY';
+  details: string;
+  ip: string;
+}

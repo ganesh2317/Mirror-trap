@@ -5,7 +5,18 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { Alert, Decoy, ScanResult, ThreatEvent } from './types';
+import type {
+  Alert,
+  AuditLogEntry,
+  Decoy,
+  DomainItem,
+  NotificationItem,
+  Organization,
+  OrgMember,
+  ScanResult,
+  ThreatEvent,
+  UserRole,
+} from './types';
 import {
   DEMO_ALERTS,
   DEMO_SCAN,
@@ -54,10 +65,132 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [scans, setScans] = useState<ScanResult[]>(() => loadPersisted().scans ?? []);
   const [decoys, setDecoys] = useState<Decoy[]>(() => loadPersisted().decoys ?? SEED_DECOYS);
   const [alerts, setAlerts] = useState<Alert[]>(() => loadPersisted().alerts ?? []);
-  const [plan, setPlanState] = useState<'free' | 'pro' | 'enterprise'>('free');
+  const [plan, setPlanState] = useState<'free' | 'pro' | 'enterprise'>('pro');
   const [shieldActive, setShieldActive] = useState(false);
   const [threatEvents, setThreatEvents] = useState<ThreatEvent[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Organizations
+  const [organizations, setOrganizations] = useState<Organization[]>(() => [
+    { id: 'org_acme', name: 'Acme Corp Security', slug: 'acme-corp', plan: 'pro', createdAt: '2026-01-15' },
+    { id: 'org_cyber', name: 'CyberShield Research Labs', slug: 'cybershield', plan: 'enterprise', createdAt: '2026-03-10' },
+  ]);
+  const [currentOrgId, setCurrentOrgId] = useState<string>('org_acme');
+
+  const currentOrg = useMemo(
+    () => organizations.find((o) => o.id === currentOrgId) ?? organizations[0],
+    [organizations, currentOrgId],
+  );
+
+  const switchOrg = useCallback((id: string) => {
+    setCurrentOrgId(id);
+  }, []);
+
+  const createOrg = useCallback((name: string) => {
+    const newOrg: Organization = {
+      id: `org_${Date.now()}`,
+      name,
+      slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      plan: 'pro',
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    setOrganizations((prev) => [...prev, newOrg]);
+    setCurrentOrgId(newOrg.id);
+  }, []);
+
+  // Managed Domains
+  const [domains, setDomains] = useState<DomainItem[]>(() => [
+    { id: 'dom_1', domain: 'targetcompany.com', isPrimary: true, healthStatus: 'HEALTHY', verificationStatus: 'VERIFIED', schedule: 'DAILY', lastScanDate: '2026-07-31' },
+    { id: 'dom_2', domain: 'api.targetcompany.com', isPrimary: false, healthStatus: 'WARNING', verificationStatus: 'VERIFIED', schedule: 'WEEKLY', lastScanDate: '2026-07-30' },
+  ]);
+
+  const addDomain = useCallback((domainName: string) => {
+    const clean = domainName.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (!clean) return;
+    const newItem: DomainItem = {
+      id: `dom_${Date.now()}`,
+      domain: clean,
+      isPrimary: domains.length === 0,
+      healthStatus: 'HEALTHY',
+      verificationStatus: 'VERIFIED',
+      schedule: 'DAILY',
+      lastScanDate: new Date().toISOString().slice(0, 10),
+    };
+    setDomains((prev) => [...prev, newItem]);
+  }, [domains.length]);
+
+  const removeDomain = useCallback((id: string) => {
+    setDomains((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
+  const togglePrimaryDomain = useCallback((id: string) => {
+    setDomains((prev) => prev.map((d) => ({ ...d, isPrimary: d.id === id })));
+  }, []);
+
+  // User Management & RBAC Roster
+  const [members, setMembers] = useState<OrgMember[]>(() => [
+    { id: 'mem_1', email: 'security-lead@acme.com', role: 'Owner', joinedAt: '2026-01-15', status: 'ACTIVE' },
+    { id: 'mem_2', email: 'devsecops@acme.com', role: 'Administrator', joinedAt: '2026-02-01', status: 'ACTIVE' },
+    { id: 'mem_3', email: 'analyst@acme.com', role: 'Security Analyst', joinedAt: '2026-04-12', status: 'ACTIVE' },
+  ]);
+
+  const inviteMember = useCallback((email: string, role: UserRole) => {
+    const newMem: OrgMember = {
+      id: `mem_${Date.now()}`,
+      email: email.trim(),
+      role,
+      joinedAt: new Date().toISOString().slice(0, 10),
+      status: 'PENDING',
+    };
+    setMembers((prev) => [...prev, newMem]);
+  }, []);
+
+  const updateMemberRole = useCallback((id: string, role: UserRole) => {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
+  }, []);
+
+  const removeMember = useCallback((id: string) => {
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+  }, []);
+
+  // Notifications
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => [
+    { id: 'n_1', timestamp: new Date().toISOString(), category: 'scan', title: 'OSINT Sweep Complete', body: 'targetcompany.com scanned cleanly with ARS 42.', read: false },
+    { id: 'n_2', timestamp: new Date(Date.now() - 3600000).toISOString(), category: 'ssl', title: 'SSL Certificate Validated', body: 'Google Trust Services cert valid for 180 days.', read: true },
+    { id: 'n_3', timestamp: new Date(Date.now() - 7200000).toISOString(), category: 'tripwire', title: 'Decoy Intercept', body: 'Honey-admin login accessed by 194.26.29.112.', read: false },
+  ]);
+
+  const unreadNotificationsCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications],
+  );
+
+  const markNotificationRead = useCallback((id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  }, []);
+
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, []);
+
+  // Immutable Audit Logs
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => [
+    { id: 'al_1', timestamp: new Date().toISOString(), actorEmail: 'security-lead@acme.com', action: 'SCAN_EXECUTED', category: 'SCAN', details: 'Full OSINT sweep on targetcompany.com', ip: '127.0.0.1' },
+    { id: 'al_2', timestamp: new Date(Date.now() - 86400000).toISOString(), actorEmail: 'devsecops@acme.com', action: 'DECOY_DEPLOYED', category: 'SECURITY', details: 'Honey-admin decoy activated on admin.targetcompany.com', ip: '127.0.0.1' },
+  ]);
+
+  const logAuditEvent = useCallback((action: string, category: AuditLogEntry['category'], details: string) => {
+    const entry: AuditLogEntry = {
+      id: `al_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      actorEmail: user?.email ?? 'security-lead@acme.com',
+      action,
+      category,
+      details,
+      ip: '127.0.0.1',
+    };
+    setAuditLogs((prev) => [entry, ...prev]);
+  }, [user]);
 
   // Persist
   useEffect(() => {
@@ -294,6 +427,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     signOut,
     demoMode,
     setDemoMode,
+    organizations,
+    currentOrg,
+    switchOrg,
+    createOrg,
+    domains,
+    addDomain,
+    removeDomain,
+    togglePrimaryDomain,
+    members,
+    inviteMember,
+    updateMemberRole,
+    removeMember,
+    notifications,
+    unreadNotificationsCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+    auditLogs,
+    logAuditEvent,
     isPro: plan === 'pro' || plan === 'enterprise',
     isEnterprise: plan === 'enterprise',
     setPlan,
